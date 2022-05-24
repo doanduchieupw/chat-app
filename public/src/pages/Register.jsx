@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 import Logo from '../assets/logo.svg';
+import { registerRoute } from '../utils/APIRoutes';
 
 export default function Register() {
+    const navigate = useNavigate();
     const [values, setValues] = useState({
         username: '',
         email: '',
@@ -20,18 +23,59 @@ export default function Register() {
         draggable: true,
         theme: 'dark',
     };
+    
+    useEffect(() => {
+        if (localStorage.getItem('chat-app-user')) {
+            navigate('/');
+        }
+    }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        handleValidation();
-        alert('form');
+        if (handleValidation()) {
+            const { username, email, password } = values;
+            const { data } = await axios.post(registerRoute, {
+                username,
+                email,
+                password,
+            });
+            if (!data.status) {
+                toast.error(data.msg, toastOptions);
+            } else {
+                localStorage.setItem(
+                    'chat-app-user',
+                    JSON.stringify(data.user)
+                );
+                navigate('/');
+            }
+        }
     };
 
     const handleValidation = () => {
         const { username, email, password, confirmPassword } = values;
         if (confirmPassword !== password) {
-            toast.error(`The passwords you entered didn't match – try again`, toastOptions);
+            toast.error(
+                `The passwords you entered didn't match – try again`,
+                toastOptions
+            );
+            return false;
+        } else if (username.length < 3) {
+            toast.error(
+                'Your username must be at least 3 characters',
+                toastOptions
+            );
+            return false;
+        } else if (password.length < 8) {
+            toast.error(
+                'Your password must be at least 10 characters',
+                toastOptions
+            );
+            return false;
+        } else if (email === '') {
+            toast.error('Enter your email address', toastOptions);
+            return false;
         }
+        return true;
     };
 
     const handleChange = (e) => {
@@ -45,38 +89,38 @@ export default function Register() {
         <>
             <FormContainer>
                 <form onSubmit={(e) => handleSubmit(e)}>
-                    <div className="brand">
-                        <img src={Logo} alt="" />
+                    <div className='brand'>
+                        <img src={Logo} alt='' />
                         <h1>snappy</h1>
                     </div>
                     <input
-                        type="text"
-                        placeholder="Username"
-                        name="username"
+                        type='text'
+                        placeholder='Username'
+                        name='username'
                         onChange={(e) => handleChange(e)}
                     />
                     <input
-                        type="email"
-                        placeholder="Email"
-                        name="email"
+                        type='email'
+                        placeholder='Email'
+                        name='email'
                         onChange={(e) => handleChange(e)}
                     />
                     <input
-                        type="password"
-                        placeholder="Password"
-                        name="password"
+                        type='password'
+                        placeholder='Password'
+                        name='password'
                         onChange={(e) => handleChange(e)}
                     />
                     <input
-                        type="password"
-                        placeholder="Confirm password"
-                        name="confirmPassword"
+                        type='password'
+                        placeholder='Confirm password'
+                        name='confirmPassword'
                         onChange={(e) => handleChange(e)}
                     />
-                    <button type="submit">Create user</button>
+                    <button type='submit'>Create user</button>
                     <span>
-                        Already have an account? ?{' '}
-                        <Link to="/login">Login</Link>
+                        Already have an account? {' '}
+                        <Link to='/login'>Login</Link>
                     </span>
                 </form>
             </FormContainer>
@@ -85,6 +129,7 @@ export default function Register() {
     );
 }
 
+// Style
 const FormContainer = styled.div`
     height: 100vh;
     width: 100vw;

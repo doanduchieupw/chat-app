@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const route = require('./routes');
 
 const app = express();
 require('dotenv').config();
@@ -19,6 +20,8 @@ mongoose
     .catch((err) => {
         console.log(err.message);
     });
+
+route(app);
 
 const server = app.listen(process.env.PORT, () => {
     console.log(`Server started on Port ${process.env.PORT}`);
